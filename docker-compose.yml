@@ -1,0 +1,8 @@
+services:
+  epycocotools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/workspace
+    tty: true

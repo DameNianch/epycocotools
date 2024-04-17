@@ -3,14 +3,12 @@ annotations/
 results/
 external/
 .DS_Store
+*.ipynb
+*.so
 
-MatlabAPI/analyze*/
-MatlabAPI/visualize*/
-MatlabAPI/private/maskApiMex.*
-
-PythonAPI/pycocotools/__init__.pyc
-PythonAPI/pycocotools/_mask.c
-PythonAPI/pycocotools/_mask.so
-PythonAPI/pycocotools/coco.pyc
-PythonAPI/pycocotools/cocoeval.pyc
-PythonAPI/pycocotools/mask.pyc
+epycocotools/__init__.pyc
+epycocotools/_mask.c
+epycocotools/_mask.so
+epycocotools/coco.pyc
+epycocotools/cocoeval.pyc
+epycocotools/mask.pyc
