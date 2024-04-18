@@ -6,9 +6,9 @@ import numpy as np
 
 ext_modules = [
     Extension(
-        "epycocotools._mask",
-        sources=["./common/maskApi.c", "./epycocotools/_mask.pyx"],
-        include_dirs=[np.get_include(), "./common"],
+        "epycocotools.src._mask",
+        sources=["./epycocotools/common/maskApi.c", "./epycocotools/src/_mask.pyx"],
+        include_dirs=[np.get_include(), "./epycocotools/common"],
         extra_compile_args=["-Wno-cpp", "-Wno-unused-function", "-std=c99"],
     )
 ]

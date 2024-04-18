@@ -12,3 +12,6 @@ epycocotools/_mask.so
 epycocotools/coco.pyc
 epycocotools/cocoeval.pyc
 epycocotools/mask.pyc
+
+epycocotools.egg-info/
+build/
