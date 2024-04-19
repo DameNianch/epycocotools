@@ -1,12 +1,7 @@
 import json
 import os
 import unittest
-import sys
-
-print(sys.path)
 from epycocotools.coco import COCO
-import json
-import unittest
 
 
 class CocoTestCase(unittest.TestCase):
@@ -57,9 +52,11 @@ class CocoTestCase(unittest.TestCase):
         os.remove(self.TEST_DATA_FILE)
 
     def test_load_annotations(self):
+        # Load the annotations from the test data file
         coco_obj = COCO(self.TEST_DATA_FILE)
         annotations = coco_obj.loadAnns(ids=[1, 2])
 
+        # Assert the expected behavior of the function
         self.assertEqual(len(annotations), 2)
         self.assertEqual(annotations[0]["id"], 1)
         self.assertEqual(annotations[0]["image_id"], 1)
@@ -74,6 +71,66 @@ class CocoTestCase(unittest.TestCase):
         self.assertEqual(annotations[1]["bbox"], [200, 200, 300, 300])
         self.assertEqual(annotations[1]["area"], 60000)
         self.assertEqual(annotations[1]["iscrowd"], 0)
+
+    def test_create_index(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Assert that the index has been created successfully
+        self.assertIsNotNone(coco_obj.dataset)
+        self.assertIsNotNone(coco_obj.anns)
+        self.assertIsNotNone(coco_obj.cats)
+        self.assertIsNotNone(coco_obj.imgs)
+
+    def test_get_ann_ids(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Get annotation ids for specific image and category
+        ann_ids = coco_obj.getAnnIds(imgIds=[1], catIds=[1])
+        # Assert that the correct annotation ids are returned
+        self.assertEqual(ann_ids, [1])
+
+    def test_get_cat_ids(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Get category ids for specific category names
+        cat_ids = coco_obj.getCatIds(catNms=["cat"])
+        # Assert that the correct category ids are returned
+        self.assertEqual(cat_ids, [1])
+
+    def test_get_img_ids(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Get image ids for specific image and category
+        img_ids = coco_obj.getImgIds(imgIds=[1], catIds=[1])
+        # Assert that the correct image ids are returned
+        self.assertEqual(img_ids, [1])
+
+    def test_load_anns(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Load specific annotations by their ids
+        annotations = coco_obj.loadAnns(ids=[1])
+        # Assert that the correct annotations are loaded
+        self.assertEqual(len(annotations), 1)
+        self.assertEqual(annotations[0]["id"], 1)
+
+    def test_load_cats(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Load specific categories by their ids
+        categories = coco_obj.loadCats(ids=[1])
+        # Assert that the correct categories are loaded
+        self.assertEqual(len(categories), 1)
+        self.assertEqual(categories[0]["id"], 1)
+
+    def test_load_imgs(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        coco_obj.createIndex()
+        # Load specific images by their ids
+        images = coco_obj.loadImgs(ids=[1])
+        # Assert that the correct images are loaded
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0]["id"], 1)
 
 
 if __name__ == "__main__":
