@@ -1,7 +1,2 @@
-[tool.pytest.ini_options]
-addopts = [
-    "--import-mode=importlib",
-]
-
 [build-system]
 requires = ["Cython", "numpy", "setuptools"]

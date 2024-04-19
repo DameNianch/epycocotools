@@ -11,3 +11,7 @@ install:
 uninstall:
 	# uninstall epycocotools
 	pip uninstall -y epycocotools
+
+test:
+	# run tests
+	python -m pytest tests
