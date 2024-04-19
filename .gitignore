@@ -15,3 +15,6 @@ epycocotools/mask.pyc
 
 epycocotools.egg-info/
 build/
+junks/
+results/
+__pycache__/

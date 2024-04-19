@@ -1,9 +1,13 @@
 all:
     # install epycocotools locally
 	python setup.py build_ext --inplace
-	rm -rf build
+	rm -rf build dist epycocotools.egg-info
 
 install:
 	# install epycocotools to the Python site-packages
-	python setup.py build_ext install
-	rm -rf build
+	pip install .
+	rm -rf build dist epycocotools.egg-info
+
+uninstall:
+	# uninstall epycocotools
+	pip uninstall -y epycocotools

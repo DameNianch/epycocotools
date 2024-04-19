@@ -1,5 +1,5 @@
 # distutils: language = c
-# distutils: sources = ./epycocotools/common/maskApi.c
+# distutils: sources = ./src/epycocotools/common/maskApi.c
 
 #**************************************************************************
 # Microsoft COCO Toolbox.      version 2.0
