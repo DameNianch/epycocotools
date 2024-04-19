@@ -11,7 +11,9 @@
         "ms-azuretools.vscode-docker",
         "ms-vscode-remote.remote-containers",
         "ms-python.black-formatter",
-        "ms-vscode.makefile-tools"
+        "ms-vscode.makefile-tools",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ]
     }
   }
