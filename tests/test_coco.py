@@ -1,7 +1,7 @@
 import json
 import os
 import unittest
-from epycocotools.coco import COCO
+from src.epycocotools.coco import COCO
 
 
 class CocoTestCase(unittest.TestCase):

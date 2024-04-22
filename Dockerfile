@@ -1,5 +1,5 @@
 FROM python:3.12.3-bullseye
 
-RUN pip install numpy cython pytest
+RUN pip install numpy cython pytest matplotlib
 
 WORKDIR /workspace
