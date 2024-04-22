@@ -55,17 +55,34 @@ import itertools
 from . import mask as maskUtils
 import os
 from collections import defaultdict
-import sys
-
-PYTHON_VERSION = sys.version_info[0]
-if PYTHON_VERSION == 2:
-    from urllib import urlretrieve
-elif PYTHON_VERSION == 3:
-    from urllib.request import urlretrieve
+from urllib.request import urlretrieve
 
 
 def _isArrayLike(obj):
     return hasattr(obj, "__iter__") and hasattr(obj, "__len__")
+
+
+from typing import List, Dict, Any, TypedDict
+
+
+class COCOAnnotation(TypedDict):
+    id: int
+    image_id: int
+    category_id: int
+    bbox: List[int]
+    area: float
+    iscrowd: int
+
+
+class COCOCategory(TypedDict):
+    id: int
+    name: str
+
+
+class COCOImage(TypedDict):
+    id: int
+    file_name: str
+    coco_url: str
 
 
 class COCO:
@@ -77,49 +94,53 @@ class COCO:
         :return:
         """
         # load dataset
-        self.dataset, self.anns, self.cats, self.imgs = dict(), dict(), dict(), dict()
-        self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
-        if not annotation_file == None:
-            print("loading annotations into memory...")
-            tic = time.time()
-            dataset = json.load(open(annotation_file, "r"))
-            assert (
-                type(dataset) == dict
-            ), "annotation file format {} not supported".format(type(dataset))
-            print("Done (t={:0.2f}s)".format(time.time() - tic))
-            self.dataset = dataset
-            self.createIndex()
+        self.dataset: Dict[str, Any] = {}
+        self.anns: Dict[int, COCOAnnotation] = {}
+        self.cats: Dict[int, COCOCategory] = {}
+        self.imgs: Dict[int, COCOImage] = {}
+        self.imgToAnns: Dict[int, List[COCOAnnotation]] = defaultdict(list)
+        self.catToImgs: Dict[int, List[int]] = defaultdict(list)
+        if annotation_file is not None:
+            self._loadAnnotationsFromFile(annotation_file)
+
+    def _loadAnnotationsFromFile(self, annotation_file):
+        print("loading annotations into memory...")
+        tic = time.time()
+        dataset = json.load(open(annotation_file, "r"))
+        assert type(dataset) == dict, "annotation file format {} not supported".format(
+            type(dataset)
+        )
+        print("Done (t={:0.2f}s)".format(time.time() - tic))
+        self.dataset = dataset
+        self.createIndex()
 
     def createIndex(self):
         # create index
         print("creating index...")
-        anns, cats, imgs = {}, {}, {}
-        imgToAnns, catToImgs = defaultdict(list), defaultdict(list)
+        self.anns: Dict[int, COCOAnnotation] = {}
+        self.cats: Dict[int, COCOCategory] = {}
+        self.imgs: Dict[int, COCOImage] = {}
+        self.imgToAnns: Dict[int, List[COCOAnnotation]] = defaultdict(list)
+        self.catToImgs: Dict[int, List[int]] = defaultdict(list)
+
         if "annotations" in self.dataset:
             for ann in self.dataset["annotations"]:
-                imgToAnns[ann["image_id"]].append(ann)
-                anns[ann["id"]] = ann
+                self.imgToAnns[ann["image_id"]].append(ann)
+                self.anns[ann["id"]] = ann
 
         if "images" in self.dataset:
             for img in self.dataset["images"]:
-                imgs[img["id"]] = img
+                self.imgs[img["id"]] = img
 
         if "categories" in self.dataset:
             for cat in self.dataset["categories"]:
-                cats[cat["id"]] = cat
+                self.cats[cat["id"]] = cat
 
         if "annotations" in self.dataset and "categories" in self.dataset:
             for ann in self.dataset["annotations"]:
-                catToImgs[ann["category_id"]].append(ann["image_id"])
+                self.catToImgs[ann["category_id"]].append(ann["image_id"])
 
         print("index created!")
-
-        # create class members
-        self.anns = anns
-        self.imgToAnns = imgToAnns
-        self.catToImgs = catToImgs
-        self.imgs = imgs
-        self.cats = cats
 
     def info(self):
         """
@@ -129,12 +150,16 @@ class COCO:
         for key, value in self.dataset["info"].items():
             print("{}: {}".format(key, value))
 
-    def getAnnIds(self, imgIds=[], catIds=[], areaRng=[], iscrowd=None):
+    class AreaRange(TypedDict):
+        min: float
+        max: float
+
+    def getAnnIds(self, imgIds=[], catIds=[], areaRng: AreaRange = None, iscrowd=None):
         """
         Get ann ids that satisfy given filter conditions. default skips that filter
         :param imgIds  (int array)     : get anns for given imgs
                catIds  (int array)     : get anns for given cats
-               areaRng (float array)   : get anns for given area range (e.g. [0 inf])
+               areaRng (AreaRange)     : get anns for given area range (e.g. [0 inf])
                iscrowd (boolean)       : get anns for given crowd label (False or True)
         :return: ids (int array)       : integer array of ann ids
         """
@@ -158,11 +183,11 @@ class COCO:
             )
             anns = (
                 anns
-                if len(areaRng) == 0
+                if areaRng is None
                 else [
                     ann
                     for ann in anns
-                    if ann["area"] > areaRng[0] and ann["area"] < areaRng[1]
+                    if ann["area"] > areaRng["min"] and ann["area"] < areaRng["max"]
                 ]
             )
         if not iscrowd == None:
@@ -367,7 +392,7 @@ class COCO:
 
         print("Loading and preparing results...")
         tic = time.time()
-        if type(resFile) == str or (PYTHON_VERSION == 2 and type(resFile) == unicode):
+        if type(resFile) == str:
             anns = json.load(open(resFile))
         elif type(resFile) == np.ndarray:
             anns = self.loadNumpyAnnotations(resFile)
