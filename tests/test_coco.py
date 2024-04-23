@@ -1,6 +1,8 @@
 import json
 import os
 import unittest
+
+import numpy as np
 from src.epycocotools.coco import COCO
 
 
@@ -38,6 +40,14 @@ class CocoTestCase(unittest.TestCase):
                     "bbox": [200, 200, 300, 300],
                     "area": 60000,
                     "iscrowd": 0,
+                },
+                {
+                    "id": 3,
+                    "image_id": 2,
+                    "category_id": 2,
+                    "bbox": [1, 2, 3, 4],
+                    "area": 12,
+                    "iscrowd": 1,
                 },
             ],
             "categories": [
@@ -131,6 +141,41 @@ class CocoTestCase(unittest.TestCase):
         # Assert that the correct images are loaded
         self.assertEqual(len(images), 1)
         self.assertEqual(images[0]["id"], 1)
+
+    def test_load_numpy_annotations(self):
+        coco = COCO()
+        data = np.array([[1, 100, 200, 50, 50, 0.9, 1], [2, 150, 250, 70, 60, 0.8, 2]])
+        annotations = coco._loadNumpyAnnotations(data)
+        self.assertEqual(len(annotations), 2)
+        self.assertEqual(annotations[0]["image_id"], 1)
+        self.assertEqual(annotations[0]["bbox"], [100, 200, 50, 50])
+        self.assertEqual(annotations[0]["score"], 0.9)
+        self.assertEqual(annotations[0]["category_id"], 1)
+        self.assertEqual(annotations[1]["image_id"], 2)
+        self.assertEqual(annotations[1]["bbox"], [150, 250, 70, 60])
+        self.assertEqual(annotations[1]["score"], 0.8)
+        self.assertEqual(annotations[1]["category_id"], 2)
+
+    def test_getAnnIds_with_areaRange(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        areaRange = {"min": 0, "max": 40001}
+        ann_ids = coco_obj.getAnnIds(areaRng=areaRange)
+        # Assert that the correct annotation ids are returned based on area range
+        self.assertEqual(ann_ids, [1, 3])
+
+    def test_getAnnIds_with_iscrowd(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        iscrowd = True
+        ann_ids = coco_obj.getAnnIds(iscrowd=iscrowd)
+        # Assert that the correct annotation ids are returned based on iscrowd flag
+        self.assertEqual(ann_ids, [3])
+
+    def test_getAnnIds_with_is_not_crowd(self):
+        coco_obj = COCO(self.TEST_DATA_FILE)
+        iscrowd = False
+        ann_ids = coco_obj.getAnnIds(iscrowd=iscrowd)
+        # Assert that the correct annotation ids are returned based on iscrowd flag
+        self.assertEqual(ann_ids, [1, 2])
 
 
 if __name__ == "__main__":

@@ -166,7 +166,7 @@ class COCO:
         imgIds = imgIds if _isArrayLike(imgIds) else [imgIds]
         catIds = catIds if _isArrayLike(catIds) else [catIds]
 
-        if len(imgIds) == len(catIds) == len(areaRng) == 0:
+        if len(imgIds) == len(catIds) == 0 and areaRng is None:
             anns = self.dataset["annotations"]
         else:
             if not len(imgIds) == 0:
@@ -187,10 +187,11 @@ class COCO:
                 else [
                     ann
                     for ann in anns
-                    if ann["area"] > areaRng["min"] and ann["area"] < areaRng["max"]
+                    if ann["area"] > areaRng.get("min", 0)
+                    and ann["area"] < areaRng.get("max", float("inf"))
                 ]
             )
-        if not iscrowd == None:
+        if iscrowd is not None:
             ids = [ann["id"] for ann in anns if ann["iscrowd"] == iscrowd]
         else:
             ids = [ann["id"] for ann in anns]
@@ -395,7 +396,7 @@ class COCO:
         if type(resFile) == str:
             anns = json.load(open(resFile))
         elif type(resFile) == np.ndarray:
-            anns = self.loadNumpyAnnotations(resFile)
+            anns = self._loadNumpyAnnotations(resFile)
         else:
             anns = resFile
         assert type(anns) == list, "results in not an array of objects"
@@ -473,7 +474,7 @@ class COCO:
                 "downloaded {}/{} images (t={:0.1f}s)".format(i, N, time.time() - tic)
             )
 
-    def loadNumpyAnnotations(self, data):
+    def _loadNumpyAnnotations(self, data):
         """
         Convert result data from a numpy array [Nx7] where each row contains {imageID,x1,y1,w,h,score,class}
         :param  data (numpy.ndarray)
