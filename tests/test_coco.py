@@ -1,7 +1,7 @@
 import json
 import os
 import unittest
-
+import tempfile
 import numpy as np
 from src.epycocotools.coco import COCO
 
@@ -176,6 +176,55 @@ class CocoTestCase(unittest.TestCase):
         ann_ids = coco_obj.getAnnIds(iscrowd=iscrowd)
         # Assert that the correct annotation ids are returned based on iscrowd flag
         self.assertEqual(ann_ids, [1, 2])
+
+
+class TestLoadRes(unittest.TestCase):
+
+    def setUp(self):
+        # Setup code to run before each test
+        self.coco = (
+            COCO()
+        )  # Assuming COCO can be initialized without arguments for simplicity
+
+    def test_load_res_with_string(self):
+        # Test loading results from a file path (string)
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as tmp:
+            json.dump([{"image_id": 1, "bbox": [0, 0, 10, 10], "category_id": 1}], tmp)
+            tmp.close()  # Close the file so that it can be reopened by loadRes
+            res = self.coco.loadRes(tmp.name)
+            os.unlink(tmp.name)  # Clean up temporary file
+
+        self.assertIsInstance(res, COCO)
+        self.assertTrue(len(res.dataset["annotations"]) > 0)
+
+    def test_load_res_with_numpy_array(self):
+        # Test loading results from a numpy array
+        data = np.array([[1, 0, 0, 10, 10, 0.9, 1]])
+        res = self.coco.loadRes(data)
+
+        self.assertIsInstance(res, COCO)
+        self.assertTrue(len(res.dataset["annotations"]) > 0)
+
+    def test_load_res_with_list(self):
+        # Test loading results from a list of annotations
+        annotations = [{"image_id": 1, "bbox": [0, 0, 10, 10], "category_id": 1}]
+        res = self.coco.loadRes(annotations)
+
+        self.assertIsInstance(res, COCO)
+        self.assertEqual(len(res.dataset["annotations"]), len(annotations))
+
+    def test_load_res_with_different_annotation_types(self):
+        # Test loading results with different types of annotations (e.g., bbox, segmentation)
+        annotations = [
+            {"image_id": 1, "caption": "A caption"},
+            {"image_id": 2, "bbox": [0, 0, 10, 10], "category_id": 1},
+            {"image_id": 3, "segmentation": [], "category_id": 2},
+            {"image_id": 4, "keypoints": [0, 0, 2], "category_id": 3},
+        ]
+        res = self.coco.loadRes(annotations)
+
+        self.assertIsInstance(res, COCO)
+        self.assertEqual(len(res.dataset["annotations"]), len(annotations))
 
 
 if __name__ == "__main__":
