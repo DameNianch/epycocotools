@@ -166,36 +166,42 @@ class COCO:
         imgIds = imgIds if _isArrayLike(imgIds) else [imgIds]
         catIds = catIds if _isArrayLike(catIds) else [catIds]
 
-        if len(imgIds) == len(catIds) == 0 and areaRng is None:
-            anns = self.dataset["annotations"]
+        anns = self._filterAnnsByImgAndCatIds(imgIds, catIds)
+        anns = self._filterAnnsByAreaRange(anns, areaRng)
+        ids = self._filterAnnsByIscrowd(anns, iscrowd)
+        return ids
+
+    def _filterAnnsByImgAndCatIds(self, imgIds, catIds):
+        if len(imgIds) == len(catIds) == 0:
+            return self.dataset["annotations"]
         else:
-            if not len(imgIds) == 0:
+            if imgIds:
                 lists = [
                     self.imgToAnns[imgId] for imgId in imgIds if imgId in self.imgToAnns
                 ]
                 anns = list(itertools.chain.from_iterable(lists))
             else:
                 anns = self.dataset["annotations"]
-            anns = (
-                anns
-                if len(catIds) == 0
-                else [ann for ann in anns if ann["category_id"] in catIds]
-            )
-            anns = (
-                anns
-                if areaRng is None
-                else [
-                    ann
-                    for ann in anns
-                    if ann["area"] > areaRng.get("min", 0)
-                    and ann["area"] < areaRng.get("max", float("inf"))
-                ]
-            )
-        if iscrowd is not None:
-            ids = [ann["id"] for ann in anns if ann["iscrowd"] == iscrowd]
+            if catIds:
+                anns = [ann for ann in anns if ann["category_id"] in catIds]
+            return anns
+
+    def _filterAnnsByAreaRange(self, anns, areaRng):
+        if areaRng is None:
+            return anns
         else:
-            ids = [ann["id"] for ann in anns]
-        return ids
+            return [
+                ann
+                for ann in anns
+                if ann["area"] > areaRng.get("min", 0)
+                and ann["area"] < areaRng.get("max", float("inf"))
+            ]
+
+    def _filterAnnsByIscrowd(self, anns, iscrowd):
+        if iscrowd is None:
+            return [ann["id"] for ann in anns]
+        else:
+            return [ann["id"] for ann in anns if ann["iscrowd"] == iscrowd]
 
     def getCatIds(self, catNms=[], supNms=[], catIds=[]):
         """
